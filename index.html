@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MICROJOY (Red Edition)</title>
+    <title>MICROJOY PS4 Relay v1.0.4</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#050505">
@@ -12,10 +12,10 @@
     <style>
         :root {
             --bg-color: #050505;
-            --panel-bg: #111;
-            --accent: #ff1a40;       /* Merah Utama */
-            --accent-dim: #4d0010;   /* Merah Gelap untuk garisan */
-            --danger: #ffbb00;       /* Kuning amaran supaya kontra dengan merah */
+            --panel-bg: #0d0d0d;
+            --ps-blue: #3388ff;
+            --ps-blue-dim: #002266;
+            --danger: #ff2a2a;
             --text-main: #e0e0e0;
         }
 
@@ -27,224 +27,130 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             overflow: hidden;
-            touch-action: none;
             display: flex; flex-direction: column;
         }
 
         /* --- HEADER --- */
         .header {
             padding: 12px 15px; background: var(--panel-bg);
-            border-bottom: 1px solid var(--accent-dim);
-            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--ps-blue-dim);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 100;
         }
-        
-        .brand-line { font-weight: bold; color: var(--accent); letter-spacing: 1px; font-size: 1rem; white-space: nowrap; }
-        .ver-tag { color: #ffffff; font-size: 0.6rem; opacity: 0.5; margin-left: 6px; }
-        
-        .status-container { display: flex; align-items: center; gap: 10px; }
-        #status { font-size: 0.7rem; color: var(--danger); text-transform: uppercase; font-weight: bold; transition: color 0.3s; }
-        #status.connected { color: var(--accent); }
+        .brand-line { font-weight: bold; color: var(--ps-blue); letter-spacing: 2px; font-size: 1.2rem; }
+        .ver-tag { color: #888; font-size: 0.75rem; margin-top: 4px; letter-spacing: 1px; }
 
-        .btn-connect {
-            background: rgba(255, 26, 64, 0.1); color: var(--accent);
-            border: 1px solid var(--accent); padding: 7px 12px;
-            font-size: 0.8rem; text-transform: uppercase; cursor: pointer;
-            clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
-            transition: background 0.2s, color 0.2s;
-        }
-        .btn-connect:active { background: var(--accent); color: #000; }
-
-        /* --- CONTROL GRID --- */
-        .control-grid {
+        /* --- MAIN DASHBOARD --- */
+        .dashboard {
             flex: 1; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; gap: 20px;
-            padding: 20px; padding-top: 8vh; padding-bottom: 5vh; 
-            position: relative;
+            align-items: center; padding: 20px; gap: 20px;
+            overflow-y: auto;
         }
 
-        .telemetry-hud {
-            background: #000; border: 1px solid var(--accent-dim);
-            padding: 8px 18px; border-radius: 20px;
-            font-size: 1.1rem; font-weight: bold; color: var(--accent);
-            text-align: center; box-shadow: 0 0 15px rgba(255, 26, 64, 0.1);
-            z-index: 10; transition: color 0.3s;
+        /* --- TELEMETRY HUD --- */
+        .telemetry-panel {
+            width: 100%; max-width: 500px;
+            background: #080808; border: 1px solid var(--ps-blue-dim);
+            border-radius: 8px; padding: 15px 20px;
+            box-shadow: 0 0 20px rgba(51,136,255,0.05);
         }
-        .telemetry-hud.offline { color: #444; border-color: #222; box-shadow: none; }
-
-        /* Left Thumb Zone */
-        .left-thumb-zone {
-            width: 100%; height: 260px; position: relative;
-            display: flex; justify-content: center; align-items: center; touch-action: none;
-        }
-
-        /* Mode 1: Dynamic Joystick */
-        .joystick-hitbox { width: 100%; height: 100%; position: absolute; touch-action: none; }
-        .joystick-base {
-            width: 180px; height: 180px; background: rgba(20, 20, 20, 0.6);
-            border: 2px solid rgba(255, 26, 64, 0.2); border-radius: 50%;
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            transition: top 0.2s ease-out, left 0.2s ease-out, border-color 0.2s; backdrop-filter: blur(4px);
-        }
-        .joystick-base.active { transition: none; border-color: rgba(255, 26, 64, 0.5); }
-        .joystick-base.max-throttle { border-color: var(--danger); box-shadow: 0 0 20px rgba(255, 187, 0, 0.3); }
-        .joystick-base::before, .joystick-base::after { content: ''; position: absolute; background: rgba(255, 26, 64, 0.2); }
-        .joystick-base::before { width: 1px; height: 100%; left: 50%; top: 0; }
-        .joystick-base::after { height: 1px; width: 100%; top: 50%; left: 0; box-shadow: 0 0 5px rgba(255, 26, 64, 0.5); }
         
-        .thumbstick {
-            width: 65px; height: 65px; background: radial-gradient(circle, var(--accent) 0%, #8f001b 100%);
-            border-radius: 50%; position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%); pointer-events: none;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5), inset 0 -3px 5px rgba(0,0,0,0.3);
-        }
-        .joystick-base.max-throttle .thumbstick { background: radial-gradient(circle, var(--danger) 0%, #8f6200 100%); }
+        .tel-header { color: #666; font-size: 0.7rem; border-bottom: 1px solid #222; padding-bottom: 5px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .tel-row { display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 6px; font-weight: bold; color: #aaa; }
+        .tel-value { color: var(--ps-blue); }
+        .tel-tx-row { border-top: 1px dashed #333; padding-top: 10px; margin-top: 5px; font-size: 1.1rem; color: #fff; }
+        .tel-tx-val { color: #00ffcc; text-shadow: 0 0 10px rgba(0,255,204,0.3); }
 
-        /* Mode 2: D-Pad */
-        .dpad-zone {
-            width: 190px; height: 190px; position: absolute; touch-action: none;
-            display: none; 
+        /* --- STATUS CLUSTER --- */
+        .status-cluster {
+            display: flex; width: 100%; max-width: 500px; gap: 15px;
         }
-        .dpad-btn {
-            position: absolute; width: 65px; height: 65px; border-radius: 12px;
-            background: rgba(30, 30, 30, 0.8); border: 2px solid rgba(255, 26, 64, 0.3);
-            color: var(--accent); font-size: 1.8rem; display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.5); transition: background 0.05s, transform 0.05s; touch-action: none;
+
+        .status-card {
+            flex: 1; background: var(--panel-bg);
+            border: 2px solid #222; border-radius: 12px;
+            padding: 15px; display: flex; flex-direction: column;
+            align-items: center; justify-content: space-between;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
-        .dpad-up { top: 0; left: 50%; transform: translateX(-50%); }
-        .dpad-down { bottom: 0; left: 50%; transform: translateX(-50%); }
-        .dpad-left { top: 50%; left: 0; transform: translateY(-50%); }
-        .dpad-right { top: 50%; right: 0; transform: translateY(-50%); }
+        .status-card.active { border-color: var(--ps-blue); box-shadow: inset 0 0 20px rgba(51,136,255,0.1); }
         
-        .dpad-btn.active-toggle { background: var(--accent); color: #000; border-color: #fff; box-shadow: 0 0 20px var(--accent); }
-        .dpad-up.active-toggle { transform: translateX(-50%) translateY(2px) scale(0.95); }
-        .dpad-down.active-toggle { transform: translateX(-50%) translateY(2px) scale(0.95); }
-        .dpad-left.active-toggle { transform: translateY(-50%) translateY(2px) scale(0.95); }
-        .dpad-right.active-toggle { transform: translateY(-50%) translateY(2px) scale(0.95); }
+        .card-title { font-size: 0.75rem; color: #888; letter-spacing: 1px; margin-bottom: 10px; text-align: center; }
+        .card-indicator { font-size: 1rem; font-weight: bold; color: var(--danger); margin-bottom: 15px; text-align: center; }
+        .status-card.active .card-indicator { color: var(--ps-blue); text-shadow: 0 0 10px rgba(51,136,255,0.5); }
 
-        /* Right Thumb: Stacked Buttons */
-        .action-column { display: flex; flex-direction: column; gap: 20px; touch-action: none; z-index: 10; }
         .btn-action {
-            width: 110px; height: 65px; border-radius: 15px;
-            background: rgba(30, 30, 30, 0.8); border: 2px solid rgba(255, 26, 64, 0.3);
-            color: var(--accent); font-size: 1.5rem; font-weight: bold;
-            display: flex; justify-content: center; align-items: center; touch-action: none;
-            box-shadow: 0 8px 15px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.1);
-            transition: transform 0.05s, box-shadow 0.05s, background 0.05s;
+            width: 100%; background: rgba(51, 136, 255, 0.1);
+            color: var(--ps-blue); border: 1px solid var(--ps-blue);
+            padding: 10px 0; border-radius: 6px; font-size: 0.85rem;
+            font-weight: bold; text-transform: uppercase; cursor: pointer;
         }
-        .btn-action.active-toggle { 
-            transform: scale(0.92) translateY(4px); background: var(--accent); color: #000;
-            box-shadow: 0 0 25px var(--accent), inset 0 5px 10px rgba(0,0,0,0.5); border-color: #fff;
-        }
+        .btn-action:active { background: var(--ps-blue); color: #000; }
 
-        /* Bottom Right Cluster */
-        .bottom-right-cluster {
-            position: fixed; bottom: 20px; right: 20px; display: flex; gap: 12px; z-index: 200;
-        }
-        .btn-icon {
-            background: rgba(255, 26, 64, 0.1); border: 1px solid var(--accent-dim);
-            color: var(--accent); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 12px;
-            display: flex; justify-content: center; align-items: center; cursor: pointer;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            transition: all 0.2s;
-        }
-        .btn-icon:active { background: var(--accent); color: #000; transform: scale(0.9); }
-
-        /* --- LANDSCAPE OVERRIDES --- */
         @media (orientation: landscape) {
-            .header { padding: 5px 15px; }
-            .control-grid { flex-direction: row; justify-content: space-between; align-items: center; padding: 10px 20px; padding-bottom: 0; }
-            .left-thumb-zone { width: 30vw; height: 100%; order: 1; }
-            .telemetry-hud { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 140px; font-size: 0.9rem; margin: 0; }
-            .action-column { order: 3; margin-right: 6vw; }
-            .bottom-right-cluster { bottom: 15px; right: 15px; }
-            .btn-icon { width: 45px; height: 45px; }
+            .dashboard { flex-direction: row; justify-content: center; align-items: flex-start; }
+            .telemetry-panel { flex: 1.2; }
+            .status-cluster { flex: 1; flex-direction: column; }
         }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="brand-line">MICROJOY BY ALIMIN <span class="ver-tag">v1.2.1</span></div>
-        <div class="status-container">
-            <span id="status">Offline</span>
-            <button class="btn-connect" id="btnConnect">Connect</button>
-        </div>
+        <div class="brand-line">MICROJOY PS4 BY ALIMIN </div>
+        <div class="ver-tag">v1.0.0</div>
     </div>
 
-    <div class="control-grid">
-        <div class="telemetry-hud offline" id="telemetryOut">AWAITING</div>
+    <div class="dashboard">
         
-        <div class="left-thumb-zone">
-            <div class="joystick-hitbox" id="joystickHitbox">
-                <div class="joystick-base" id="joystickBase">
-                    <div class="thumbstick" id="thumbstick"></div>
-                </div>
-            </div>
-            <div class="dpad-zone" id="dpadZone">
-                <div class="dpad-btn dpad-up" id="btnUp">▲</div>
-                <div class="dpad-btn dpad-right" id="btnRight">▶</div>
-                <div class="dpad-btn dpad-down" id="btnDown">▼</div>
-                <div class="dpad-btn dpad-left" id="btnLeft">◀</div>
+        <div class="telemetry-panel">
+            <div class="tel-header">DualShock Raw Input</div>
+            <div class="tel-row"><span>AXIS-X:</span><span class="tel-value" id="psX">0.00</span></div>
+            <div class="tel-row"><span>AXIS-Y:</span><span class="tel-value" id="psY">0.00</span></div>
+            <div class="tel-row"><span>D-PAD:</span><span class="tel-value" id="psDpad">IDLE</span></div>
+            <div class="tel-row"><span>[✕] CROSS (A):</span><span class="tel-value" id="psCross">OFF</span></div>
+            <div class="tel-row"><span>[◯] CIRCLE (B):</span><span class="tel-value" id="psCircle">OFF</span></div>
+            <div class="tel-row"><span>[□] SQUARE (C):</span><span class="tel-value" id="psSquare">OFF</span></div>
+            <div class="tel-row"><span>[△] TRIANGLE (D):</span><span class="tel-value" id="psTriangle">OFF</span></div>
+
+            <div class="tel-header" style="margin-top: 15px;">Micro:bit Payload</div>
+            <div class="tel-row tel-tx-row">
+                <span>TX:</span><span class="tel-tx-val" id="telemetryOut">AWAITING</span>
             </div>
         </div>
 
-        <div class="action-column">
-            <div class="btn-action" id="btnA">A</div>
-            <div class="btn-action" id="btnB">B</div>
-        </div>
-    </div>
+        <div class="status-cluster">
+            <div class="status-card" id="dsCard">
+                <div class="card-title">DUALSHOCK 4</div>
+                <div class="card-indicator" id="dsStatus">AWAITING PAIR</div>
+                <div style="font-size:0.6rem; color:#555; text-align:center;">Press PS Button</div>
+            </div>
 
-    <div class="bottom-right-cluster">
-        <button class="btn-icon" id="btnToggleMode">✜</button>
-        <button class="btn-icon" id="btnFullscreen">⛶</button>
+            <div class="status-card" id="botCard">
+                <div class="card-title">MICRO:BIT CHASSIS</div>
+                <div class="card-indicator" id="botStatus">OFFLINE</div>
+                <button class="btn-action" id="btnConnect">LINK BLE</button>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        // --- HAPTIC ENGINE ---
-        function triggerHaptic(ms) { if (navigator.vibrate) { navigator.vibrate(ms); } }
+        // --- PWA REGISTRATION ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
+        }
 
-        // --- MODE TOGGLE & FULLSCREEN ---
-        let isDpadMode = false;
-        const btnToggle = document.getElementById('btnToggleMode');
-        const joyHitbox = document.getElementById('joystickHitbox');
-        const dpZone = document.getElementById('dpadZone');
-
-        btnToggle.addEventListener('click', () => {
-            isDpadMode = !isDpadMode;
-            triggerHaptic(15);
-            if (isDpadMode) {
-                joyHitbox.style.display = 'none'; dpZone.style.display = 'block'; btnToggle.innerHTML = '⨀'; 
-            } else {
-                joyHitbox.style.display = 'block'; dpZone.style.display = 'none'; btnToggle.innerHTML = '✜'; 
-            }
-            cX = 0; cY = 0; forceKineticUpdate();
-        });
-
-        const btnFs = document.getElementById('btnFullscreen');
-        btnFs.addEventListener('click', async () => {
-            try {
-                if (!document.fullscreenElement) {
-                    await document.documentElement.requestFullscreen();
-                    if (screen.orientation && screen.orientation.lock) await screen.orientation.lock("landscape");
-                    btnFs.innerHTML = "✖"; 
-                } else {
-                    await document.exitFullscreen();
-                    if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
-                    btnFs.innerHTML = "⛶"; 
-                }
-            } catch (err) { alert("Browser blocked rotation."); }
-        });
-
-        // --- BLE CORE ---
-        if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
-
+        // --- BLE CORE (MICRO:BIT PROTOCOL) ---
         const UART_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
         const UART_RX_CHARACTERISTIC_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
-        let bleDevice, rxChar, isConnected = false;
+        let bleDevice, rxChar;
         let cX = 0, cY = 0, lX, lY;
 
-        const statusEl = document.getElementById('status'), telEl = document.getElementById('telemetryOut'), connBtn = document.getElementById('btnConnect');
+        const botCard = document.getElementById('botCard');
+        const botStatusEl = document.getElementById('botStatus');
+        const telEl = document.getElementById('telemetryOut');
+        const connBtn = document.getElementById('btnConnect');
 
         connBtn.addEventListener('click', async () => {
             if (bleDevice?.gatt.connected) { bleDevice.gatt.disconnect(); return; }
@@ -256,43 +162,23 @@
                 const server = await bleDevice.gatt.connect();
                 const service = await server.getPrimaryService(UART_SERVICE_UUID);
                 rxChar = await service.getCharacteristic(UART_RX_CHARACTERISTIC_UUID);
-                isConnected = true; statusEl.innerText = "ONLINE"; statusEl.classList.add('connected');
-                connBtn.innerText = "DISCONNECT"; telEl.classList.remove('offline');
+                
+                botStatusEl.innerText = "LINK ESTABLISHED"; botCard.classList.add('active');
+                connBtn.innerText = "SEVER CONNECTION";
                 await send("mode_analog\n");
-            } catch (e) { console.error("BLE Connection Error:", e); }
+            } catch (e) { console.error("BLE Error:", e); }
         });
 
         bleDevice?.addEventListener('gattserverdisconnected', () => {
-            isConnected = false; statusEl.innerText = "OFFLINE"; statusEl.classList.remove('connected');
-            connBtn.innerText = "CONNECT"; telEl.classList.add('offline'); telEl.innerText = "SEVERED";
+            botStatusEl.innerText = "OFFLINE"; botCard.classList.remove('active');
+            connBtn.innerText = "LINK BLE"; telEl.innerText = "SEVERED";
+            rxChar = null;
         });
 
-        // --- SISTEM BERATURAN DATA (QUEUE) UNTUK MENGELAK KESESAKAN GATT ---
-        let isWriting = false;
-        let pendingMessage = null;
-
         async function send(s) {
-            telEl.innerText = s.replace('\n','');
-            if (!rxChar || !isConnected) return;
-
-            if (isWriting) {
-                pendingMessage = s;
-                return;
-            }
-
-            isWriting = true;
-            try { 
-                await rxChar.writeValue(new TextEncoder().encode(s)); 
-            } catch (e) { 
-                console.warn("GATT Write Error:", e); 
-            }
-            isWriting = false;
-
-            if (pendingMessage) {
-                let nextMsg = pendingMessage;
-                pendingMessage = null;
-                send(nextMsg);
-            }
+            telEl.innerText = `${s.replace('\n','')}`;
+            if (!rxChar) return;
+            try { await rxChar.writeValue(new TextEncoder().encode(s)); } catch (e) {}
         }
 
         const fFormat = (v) => (v>=0?'+':'-') + Math.abs(v).toString().padStart(2,'0');
@@ -303,94 +189,88 @@
             }
         }
 
-        // --- DYNAMIC JOYSTICK ENGINE (v1.2.0) ---
-        const base = document.getElementById('joystickBase'), thumb = document.getElementById('thumbstick');
-        let activePointerId = null, originX = 0, originY = 0, currentMaxRadius = 80;
-        let edgeHitLock = false; 
-        let wasReversing = false;
+        // --- GAMEPAD API (DUALSHOCK BRIDGE) ---
+        const dsCard = document.getElementById('dsCard');
+        const dsStatusEl = document.getElementById('dsStatus');
+        
+        const outPsX = document.getElementById('psX');
+        const outPsY = document.getElementById('psY');
+        const outPsDpad = document.getElementById('psDpad');
+        const outPsCross = document.getElementById('psCross');
+        const outPsCircle = document.getElementById('psCircle');
+        const outPsSquare = document.getElementById('psSquare');
+        const outPsTriangle = document.getElementById('psTriangle');
 
-        joyHitbox.addEventListener('pointerdown', (e) => {
-            if (activePointerId !== null) return;
-            activePointerId = e.pointerId; joyHitbox.setPointerCapture(activePointerId);
-            triggerHaptic(20); base.classList.add('active');
-            const hRect = joyHitbox.getBoundingClientRect();
-            originX = e.clientX - hRect.left; originY = e.clientY - hRect.top;
-            base.style.left = `${originX}px`; base.style.top = `${originY}px`;
-            thumb.style.transform = `translate(-50%, -50%)`; 
-            cX = 0; cY = 0; edgeHitLock = false; wasReversing = false; 
-            currentMaxRadius = base.getBoundingClientRect().width / 2;
-            forceKineticUpdate();
+        let gpState = { cross: false, circle: false, square: false, triangle: false };
+        const GP_DEADZONE = 0.15;
+
+        window.addEventListener("gamepadconnected", (e) => {
+            dsStatusEl.innerText = "DS4 ACQUIRED"; dsCard.classList.add('active');
         });
 
-        joyHitbox.addEventListener('pointermove', (e) => {
-            if (activePointerId !== e.pointerId) return;
-            const hRect = joyHitbox.getBoundingClientRect();
-            let dx = (e.clientX - hRect.left) - originX, dy = (e.clientY - hRect.top) - originY;
-            const dist = Math.hypot(dx, dy);
+        window.addEventListener("gamepaddisconnected", (e) => {
+            dsStatusEl.innerText = "AWAITING PAIR"; dsCard.classList.remove('active');
+            outPsX.innerText = "0.00"; outPsY.innerText = "0.00"; outPsDpad.innerText = "IDLE";
+            outPsCross.innerText = "OFF"; outPsCircle.innerText = "OFF";
+            outPsSquare.innerText = "OFF"; outPsTriangle.innerText = "OFF";
+            cX = 0; cY = 0; forceKineticUpdate();
+        });
+
+        function pollGamepad() {
+            const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+            const gp = gamepads[0]; 
             
-            if (dist >= currentMaxRadius) {
-                dx *= currentMaxRadius / dist; dy *= currentMaxRadius / dist;
-                if (!edgeHitLock) { triggerHaptic(30); base.classList.add('max-throttle'); edgeHitLock = true; }
-            } else if (dist < currentMaxRadius * 0.85) {
-                if (edgeHitLock) { base.classList.remove('max-throttle'); edgeHitLock = false; }
+            if (gp) {
+                let ax = gp.axes[0]; 
+                let ay = gp.axes[1]; 
+                
+                outPsX.innerText = ax.toFixed(2); outPsY.innerText = ay.toFixed(2);
+
+                if (Math.abs(ax) < GP_DEADZONE) ax = 0;
+                if (Math.abs(ay) < GP_DEADZONE) ay = 0;
+
+                let dpadActive = false; let dpX = 0; let dpY = 0;
+                if (gp.buttons[12] && gp.buttons[12].pressed) { dpY = 90; dpadActive = true; } 
+                if (gp.buttons[13] && gp.buttons[13].pressed) { dpY = -90; dpadActive = true; } 
+                if (gp.buttons[14] && gp.buttons[14].pressed) { dpX = -90; dpadActive = true; } 
+                if (gp.buttons[15] && gp.buttons[15].pressed) { dpX = 90; dpadActive = true; }  
+
+                if (dpadActive) {
+                    cX = dpX; cY = dpY; outPsDpad.innerText = "ACTIVE"; outPsDpad.style.color = "#fff";
+                } else {
+                    cX = Math.round(ax * 90); cY = Math.round(-ay * 90);
+                    outPsDpad.innerText = "IDLE"; outPsDpad.style.color = "var(--ps-blue)";
+                }
+
+                if (gp.buttons[0] && gp.buttons[0].pressed && !gpState.cross) {
+                    gpState.cross = true; outPsCross.innerText = "ON"; outPsCross.style.color = "#fff"; send("A\n"); 
+                } else if (gp.buttons[0] && !gp.buttons[0].pressed && gpState.cross) {
+                    gpState.cross = false; outPsCross.innerText = "OFF"; outPsCross.style.color = "var(--ps-blue)"; send("a\n");
+                }
+
+                if (gp.buttons[1] && gp.buttons[1].pressed && !gpState.circle) {
+                    gpState.circle = true; outPsCircle.innerText = "ON"; outPsCircle.style.color = "#fff"; send("B\n"); 
+                } else if (gp.buttons[1] && !gp.buttons[1].pressed && gpState.circle) {
+                    gpState.circle = false; outPsCircle.innerText = "OFF"; outPsCircle.style.color = "var(--ps-blue)"; send("b\n");
+                }
+
+                if (gp.buttons[2] && gp.buttons[2].pressed && !gpState.square) {
+                    gpState.square = true; outPsSquare.innerText = "ON"; outPsSquare.style.color = "#fff"; send("C\n"); 
+                } else if (gp.buttons[2] && !gp.buttons[2].pressed && gpState.square) {
+                    gpState.square = false; outPsSquare.innerText = "OFF"; outPsSquare.style.color = "var(--ps-blue)"; send("c\n");
+                }
+
+                if (gp.buttons[3] && gp.buttons[3].pressed && !gpState.triangle) {
+                    gpState.triangle = true; outPsTriangle.innerText = "ON"; outPsTriangle.style.color = "#fff"; send("D\n"); 
+                } else if (gp.buttons[3] && !gp.buttons[3].pressed && gpState.triangle) {
+                    gpState.triangle = false; outPsTriangle.innerText = "OFF"; outPsTriangle.style.color = "var(--ps-blue)"; send("d\n");
+                }
             }
-            
-            thumb.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-            cX = Math.round((dx / currentMaxRadius) * 90); 
-            cY = Math.round((-dy / currentMaxRadius) * 90);
-
-            if (cY < -5 && !wasReversing) { triggerHaptic(15); wasReversing = true; } 
-            else if (cY > 5 && wasReversing) { triggerHaptic(15); wasReversing = false; }
-            
-            forceKineticUpdate(); 
-        });
-
-        function resetJoystick(e) {
-            if (activePointerId !== e.pointerId) return;
-            activePointerId = null; base.classList.remove('active', 'max-throttle');
-            base.style.left = `50%`; base.style.top = `50%`;
-            thumb.style.transform = `translate(-50%, -50%)`; 
-            cX = 0; cY = 0; edgeHitLock = false; wasReversing = false;
-            forceKineticUpdate();
+            requestAnimationFrame(pollGamepad);
         }
+        pollGamepad(); 
 
-        joyHitbox.addEventListener('pointerup', resetJoystick); 
-        joyHitbox.addEventListener('pointercancel', resetJoystick);
-
-        // --- D-PAD ENGINE ---
-        const bindDpad = (id, axis, val) => {
-            const el = document.getElementById(id); let pid = null;
-            el.addEventListener('pointerdown', (e) => {
-                if (pid !== null) return; pid = e.pointerId; el.setPointerCapture(pid);
-                triggerHaptic(15); el.classList.add('active-toggle');
-                if (axis === 'x') cX = val; if (axis === 'y') cY = val;
-                forceKineticUpdate(); 
-            });
-            function release(e) {
-                if (pid !== e.pointerId) return; pid = null; el.classList.remove('active-toggle');
-                if (axis === 'x') cX = 0; if (axis === 'y') cY = 0;
-                forceKineticUpdate(); 
-            }
-            el.addEventListener('pointerup', release); el.addEventListener('pointercancel', release);
-        };
-        bindDpad('btnUp', 'y', 90); bindDpad('btnDown', 'y', -90);
-        bindDpad('btnLeft', 'x', -90); bindDpad('btnRight', 'x', 90);
-
-        // --- ACTION BUTTONS ---
-        const bindBtn = (id, char) => {
-            const el = document.getElementById(id); let pid = null;
-            el.addEventListener('pointerdown', (e) => { 
-                if (pid !== null) return; pid = e.pointerId; el.setPointerCapture(pid);
-                triggerHaptic(15); send(char.toUpperCase() + "\n"); el.classList.add('active-toggle'); 
-            });
-            function release(e) {
-                if (pid !== e.pointerId) return; pid = null;
-                send(char.toLowerCase() + "\n"); el.classList.remove('active-toggle');
-            }
-            el.addEventListener('pointerup', release); el.addEventListener('pointercancel', release);
-        };
-        bindBtn('btnA', 'a'); bindBtn('btnB', 'b');
-
+        setInterval(forceKineticUpdate, 50); 
     </script>
 </body>
 </html>
