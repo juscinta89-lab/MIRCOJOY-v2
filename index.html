@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>XINEJOY v1.2.0 (Stable)</title>
+    <title>MICROJOY (Red Edition)</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#050505">
@@ -13,9 +13,9 @@
         :root {
             --bg-color: #050505;
             --panel-bg: #111;
-            --accent: #00ffcc;
-            --accent-dim: #004d40;
-            --danger: #ff2a2a;
+            --accent: #ff1a40;       /* Merah Utama */
+            --accent-dim: #4d0010;   /* Merah Gelap untuk garisan */
+            --danger: #ffbb00;       /* Kuning amaran supaya kontra dengan merah */
             --text-main: #e0e0e0;
         }
 
@@ -47,7 +47,7 @@
         #status.connected { color: var(--accent); }
 
         .btn-connect {
-            background: rgba(0, 255, 204, 0.1); color: var(--accent);
+            background: rgba(255, 26, 64, 0.1); color: var(--accent);
             border: 1px solid var(--accent); padding: 7px 12px;
             font-size: 0.8rem; text-transform: uppercase; cursor: pointer;
             clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
@@ -67,7 +67,7 @@
             background: #000; border: 1px solid var(--accent-dim);
             padding: 8px 18px; border-radius: 20px;
             font-size: 1.1rem; font-weight: bold; color: var(--accent);
-            text-align: center; box-shadow: 0 0 15px rgba(0,255,204,0.1);
+            text-align: center; box-shadow: 0 0 15px rgba(255, 26, 64, 0.1);
             z-index: 10; transition: color 0.3s;
         }
         .telemetry-hud.offline { color: #444; border-color: #222; box-shadow: none; }
@@ -82,23 +82,23 @@
         .joystick-hitbox { width: 100%; height: 100%; position: absolute; touch-action: none; }
         .joystick-base {
             width: 180px; height: 180px; background: rgba(20, 20, 20, 0.6);
-            border: 2px solid rgba(0, 255, 204, 0.2); border-radius: 50%;
+            border: 2px solid rgba(255, 26, 64, 0.2); border-radius: 50%;
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             transition: top 0.2s ease-out, left 0.2s ease-out, border-color 0.2s; backdrop-filter: blur(4px);
         }
-        .joystick-base.active { transition: none; border-color: rgba(0, 255, 204, 0.5); }
-        .joystick-base.max-throttle { border-color: var(--danger); box-shadow: 0 0 20px rgba(255, 42, 42, 0.3); }
-        .joystick-base::before, .joystick-base::after { content: ''; position: absolute; background: rgba(0, 255, 204, 0.2); }
+        .joystick-base.active { transition: none; border-color: rgba(255, 26, 64, 0.5); }
+        .joystick-base.max-throttle { border-color: var(--danger); box-shadow: 0 0 20px rgba(255, 187, 0, 0.3); }
+        .joystick-base::before, .joystick-base::after { content: ''; position: absolute; background: rgba(255, 26, 64, 0.2); }
         .joystick-base::before { width: 1px; height: 100%; left: 50%; top: 0; }
-        .joystick-base::after { height: 1px; width: 100%; top: 50%; left: 0; box-shadow: 0 0 5px rgba(0,255,204,0.5); }
+        .joystick-base::after { height: 1px; width: 100%; top: 50%; left: 0; box-shadow: 0 0 5px rgba(255, 26, 64, 0.5); }
         
         .thumbstick {
-            width: 65px; height: 65px; background: radial-gradient(circle, var(--accent) 0%, #008f72 100%);
+            width: 65px; height: 65px; background: radial-gradient(circle, var(--accent) 0%, #8f001b 100%);
             border-radius: 50%; position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%); pointer-events: none;
             box-shadow: 0 5px 15px rgba(0,0,0,0.5), inset 0 -3px 5px rgba(0,0,0,0.3);
         }
-        .joystick-base.max-throttle .thumbstick { background: radial-gradient(circle, var(--danger) 0%, #8f0000 100%); }
+        .joystick-base.max-throttle .thumbstick { background: radial-gradient(circle, var(--danger) 0%, #8f6200 100%); }
 
         /* Mode 2: D-Pad */
         .dpad-zone {
@@ -107,7 +107,7 @@
         }
         .dpad-btn {
             position: absolute; width: 65px; height: 65px; border-radius: 12px;
-            background: rgba(30, 30, 30, 0.8); border: 2px solid rgba(0, 255, 204, 0.3);
+            background: rgba(30, 30, 30, 0.8); border: 2px solid rgba(255, 26, 64, 0.3);
             color: var(--accent); font-size: 1.8rem; display: flex; justify-content: center; align-items: center;
             box-shadow: 0 5px 10px rgba(0,0,0,0.5); transition: background 0.05s, transform 0.05s; touch-action: none;
         }
@@ -126,7 +126,7 @@
         .action-column { display: flex; flex-direction: column; gap: 20px; touch-action: none; z-index: 10; }
         .btn-action {
             width: 110px; height: 65px; border-radius: 15px;
-            background: rgba(30, 30, 30, 0.8); border: 2px solid rgba(0, 255, 204, 0.3);
+            background: rgba(30, 30, 30, 0.8); border: 2px solid rgba(255, 26, 64, 0.3);
             color: var(--accent); font-size: 1.5rem; font-weight: bold;
             display: flex; justify-content: center; align-items: center; touch-action: none;
             box-shadow: 0 8px 15px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.1);
@@ -142,7 +142,7 @@
             position: fixed; bottom: 20px; right: 20px; display: flex; gap: 12px; z-index: 200;
         }
         .btn-icon {
-            background: rgba(0, 255, 204, 0.1); border: 1px solid var(--accent-dim);
+            background: rgba(255, 26, 64, 0.1); border: 1px solid var(--accent-dim);
             color: var(--accent); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 12px;
             display: flex; justify-content: center; align-items: center; cursor: pointer;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
@@ -165,7 +165,7 @@
 <body>
 
     <div class="header">
-        <div class="brand-line">XINEJOY BY TJ <span class="ver-tag">v1.2.0</span></div>
+        <div class="brand-line">MICROJOY BY ALIMIN <span class="ver-tag">v1.2.1</span></div>
         <div class="status-container">
             <span id="status">Offline</span>
             <button class="btn-connect" id="btnConnect">Connect</button>
@@ -275,7 +275,6 @@
             telEl.innerText = s.replace('\n','');
             if (!rxChar || !isConnected) return;
 
-            // Jika Bluetooth sedang sibuk menghantar, simpan mesej terakhir
             if (isWriting) {
                 pendingMessage = s;
                 return;
@@ -289,7 +288,6 @@
             }
             isWriting = false;
 
-            // Jika ada mesej tertunggak selepas selesai hantar, proses mesej tersebut
             if (pendingMessage) {
                 let nextMsg = pendingMessage;
                 pendingMessage = null;
@@ -344,7 +342,7 @@
             if (cY < -5 && !wasReversing) { triggerHaptic(15); wasReversing = true; } 
             else if (cY > 5 && wasReversing) { triggerHaptic(15); wasReversing = false; }
             
-            forceKineticUpdate(); // Kemas kini dihantar terus apabila paksi berubah
+            forceKineticUpdate(); 
         });
 
         function resetJoystick(e) {
