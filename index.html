@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MICROJOY PS4 Relay v1.0.4</title>
+    <title>MICROJOY PS4 Relay v1.0.5</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#050505">
@@ -99,7 +99,7 @@
 
     <div class="header">
         <div class="brand-line">MICROJOY PS4 BY ALIMIN</div>
-        <div class="ver-tag">v1.0.0</div>
+        <div class="ver-tag">v1.0.5</div>
     </div>
 
     <div class="dashboard">
@@ -109,6 +109,8 @@
             <div class="tel-row"><span>AXIS-X:</span><span class="tel-value" id="psX">0.00</span></div>
             <div class="tel-row"><span>AXIS-Y:</span><span class="tel-value" id="psY">0.00</span></div>
             <div class="tel-row"><span>D-PAD:</span><span class="tel-value" id="psDpad">IDLE</span></div>
+            <div class="tel-row"><span>[L2] REVERSE:</span><span class="tel-value" id="psL2">0.00</span></div>
+            <div class="tel-row"><span>[R2] FORWARD:</span><span class="tel-value" id="psR2">0.00</span></div>
             <div class="tel-row"><span>[✕] CROSS (A):</span><span class="tel-value" id="psCross">OFF</span></div>
             <div class="tel-row"><span>[◯] CIRCLE (B):</span><span class="tel-value" id="psCircle">OFF</span></div>
             <div class="tel-row"><span>[□] SQUARE (C):</span><span class="tel-value" id="psSquare">OFF</span></div>
@@ -199,6 +201,8 @@
         const outPsX = document.getElementById('psX');
         const outPsY = document.getElementById('psY');
         const outPsDpad = document.getElementById('psDpad');
+        const outPsL2 = document.getElementById('psL2');
+        const outPsR2 = document.getElementById('psR2');
         const outPsCross = document.getElementById('psCross');
         const outPsCircle = document.getElementById('psCircle');
         const outPsSquare = document.getElementById('psSquare');
@@ -206,6 +210,7 @@
 
         let gpState = { cross: false, circle: false, square: false, triangle: false };
         const GP_DEADZONE = 0.15;
+        const TRIG_DEADZONE = 0.05; // Deadzone untuk trigger L2/R2
         
         // Pembolehubah Kalibrasi
         let offsetX = 0;
@@ -230,6 +235,7 @@
         window.addEventListener("gamepaddisconnected", (e) => {
             dsStatusEl.innerText = "AWAITING PAIR"; dsCard.classList.remove('active');
             outPsX.innerText = "0.00"; outPsY.innerText = "0.00"; outPsDpad.innerText = "IDLE";
+            outPsL2.innerText = "0.00"; outPsR2.innerText = "0.00";
             outPsCross.innerText = "OFF"; outPsCircle.innerText = "OFF";
             outPsSquare.innerText = "OFF"; outPsTriangle.innerText = "OFF";
             cX = 0; cY = 0; 
@@ -255,6 +261,24 @@
                 if (Math.abs(ax) < GP_DEADZONE) ax = 0;
                 if (Math.abs(ay) < GP_DEADZONE) ay = 0;
 
+                // --- TRIGGER L2 / R2 (THROTTLE) ---
+                // DualShock 4: L2 = buttons[6], R2 = buttons[7] (analog, .value 0..1)
+                let r2val = gp.buttons[7] ? gp.buttons[7].value : 0;
+                let l2val = gp.buttons[6] ? gp.buttons[6].value : 0;
+
+                // Buang nilai kecil yang tak disengajakan
+                if (r2val < TRIG_DEADZONE) r2val = 0;
+                if (l2val < TRIG_DEADZONE) l2val = 0;
+
+                // Paparan telemetri trigger
+                outPsR2.innerText = r2val.toFixed(2);
+                outPsL2.innerText = l2val.toFixed(2);
+                outPsR2.style.color = r2val > 0 ? "#fff" : "var(--theme-red)";
+                outPsL2.style.color = l2val > 0 ? "#fff" : "var(--theme-red)";
+
+                // Throttle: R2 ke HADAPAN (+), L2 ke BELAKANG (-). Makin kuat tekan, makin laju.
+                let throttle = Math.round((r2val - l2val) * 90);
+
                 let dpadActive = false; let dpX = 0; let dpY = 0;
                 if (gp.buttons[12] && gp.buttons[12].pressed) { dpY = 90; dpadActive = true; } 
                 if (gp.buttons[13] && gp.buttons[13].pressed) { dpY = -90; dpadActive = true; } 
@@ -264,7 +288,14 @@
                 if (dpadActive) {
                     cX = dpX; cY = dpY; outPsDpad.innerText = "ACTIVE"; outPsDpad.style.color = "#fff";
                 } else {
-                    cX = Math.round(ax * 90); cY = Math.round(-ay * 90);
+                    cX = Math.round(ax * 90);
+                    // Throttle (L2/R2) ambil keutamaan untuk gerakan hadapan/belakang.
+                    // Jika tiada trigger ditekan, kekal guna analog stick (paksi Y).
+                    if (throttle !== 0) {
+                        cY = throttle;
+                    } else {
+                        cY = Math.round(-ay * 90);
+                    }
                     outPsDpad.innerText = "IDLE"; outPsDpad.style.color = "var(--theme-red)";
                 }
 
